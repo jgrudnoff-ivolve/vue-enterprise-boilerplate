@@ -16,7 +16,11 @@
   "dependencies": {
     "pinia": "^2.0.36",
     "vue": "^3.3.2",
-    "vue-router": "^4.2.0"
+    "vue-router": "^4.2.0",
+    "vis-timeline": "7.7.3",
+    "vis-data": "7.1.9",
+    "bootstrap": "5.3.2",
+    "jquery": "3.7.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.33.0",
