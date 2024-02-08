@@ -7,61 +7,88 @@ import { onMounted } from 'vue'
 
 onMounted(() => {
   console.log('Mounting')
-  var items = new DataSet()
+  //var items = new DataSet()
   var opNames = ['Lizzie', 'Sukhitha', 'Juan', 'Roma']
   var delayNames = ['Hauling', 'Meal break', 'Digging', 'Doing Burn Outs']
 
   // create visualization
   var container = document.getElementById('visualization')
   var options = {
-    start: '2024-01-01',
-    end: '2024-01-02',
+    min: '2024-01-01T00:00:00.000Z',
+    start: '2024-01-01T00:00:00.000Z',
+    max: '2024-01-01T08:00:00.000Z',
+    end: '2024-01-01T08:00:00.000Z',
     tooltip: {
       followMouse: true
     },
+    maxHeight: 700,
+    verticalScroll: true,
     stack: false,
     multiselect: true,
     snap: function (date, scale, step) {
-      var hour = 60 * 60 * 1000
-      return date
+      var fiveMins = 5 * 60 * 1000
+      return Math.round(date / fiveMins) * fiveMins
     },
-    groupOrder: 'content', // groupOrder can be a property name or a sorting function
+    groupOrder: function (a, b) {
+      return a.value - b.value
+    },
     editable: {
       add: true,
       updateTime: true,
       updateGroup: false,
       remove: true
     },
-    onAdd: function (item, callback) {
-      let date = new Date(item.start.getTime() + 30 * 60000)
-      item.end = date
 
+    onAdd: function (item, callback) {
       if (
         !(
           (item.group.includes('_operator') && opNames.includes(item.content)) ||
           (item.group.includes('_delay') && delayNames.includes(item.content))
         )
-      ) {
+      )
         return
+
+      let date = new Date(item.start.getTime() + 30 * 60000)
+      item.end = date
+      var parentGroup = item.group.split('_')[0]
+      var groupCategory = item.group.split('_')[1]
+
+      //if in shared timeline, replicate change to other timelines
+      if (parentGroup == 'Selected Devices') {
+        console.log('Dropped item on shared timeline')
+        console.log(timeline.groupsData)
+        const matchingGroups = timeline.groupsData.get({
+          filter: (x) => {
+            let groupCat = x.id.split('_')[1]
+            let groupParent = x.id.split('_')[0]
+            return groupCat == groupCategory && groupParent != 'Selected Devices'
+          }
+        })
+        matchingGroups.forEach((x) => {
+          let clonedItem = JSON.parse(JSON.stringify(item))
+          clonedItem.group = x.id
+          clonedItem.id = generateGUID()
+          setItemTooltip(clonedItem)
+          items.add(clonedItem)
+        })
+        console.log(item)
+        item.id = generateGUID()
+        setItemTooltip(item)
       }
 
-      if (opNames.includes(item.content)) {
-        setSubGroup(item, 'operator')
-      } else {
-        setSubGroup(item, 'delay')
-      }
+      setSubGroup(item, groupCategory)
 
       // Check if dropped within a delay
       var overlappingItem = items.get({
         filter: (x) => {
           return (
-            x.subgroup == item.subgroup &&
             x.group == item.group &&
             Date.parse(x.start) < Date.parse(item.start) &&
             Date.parse(x.end) > Date.parse(item.start)
           )
         }
       })[0]
+
       // If dropped within another delay, either replace or split
       if (overlappingItem != null) {
         console.log('OverlapppingItem', JSON.stringify(overlappingItem))
@@ -124,7 +151,6 @@ onMounted(() => {
         }
       }
 
-      let duration = Math.round((item.end - item.start) / (1000 * 60))
       setItemTooltip(item)
       callback(item)
     },
@@ -135,14 +161,35 @@ onMounted(() => {
   }
 
   var timeline = new Timeline(container)
-
+  var groups = new DataSet()
   timeline.setOptions(options)
-  setGroups(timeline)
+  setGroups(timeline, groups)
+  var items = new DataSet([
+    {
+      id: 1,
+      content: 'Digging - Uneditable',
+      editable: false,
+      start: '2024-01-01T03:00:00.000Z',
+      end: '2024-01-01T05:00:00.000Z',
+      group: 'RD336_delays'
+    }
+  ])
   timeline.setItems(items)
 
   $('#assetSelection').on('change', function (e) {
-    setGroups(timeline)
+    setGroups(timeline, groups)
+    //remove items from shared timeline
+    //Add shared items to this timeline
   })
+
+  $('#nextShift').on('click', function (e) {
+    changeTimelineBoundaries(timeline, 8)
+  })
+
+  $('#previousShift').on('click', function (e) {
+    changeTimelineBoundaries(timeline, -8)
+  })
+
   var dragItems = document.querySelectorAll('.items .item')
   for (var i = dragItems.length - 1; i >= 0; i--) {
     var item = dragItems[i]
@@ -150,28 +197,36 @@ onMounted(() => {
   }
 })
 
-function setGroups(timelineObject) {
+function setGroups(timelineObject, groupDataSet) {
   var selected = new Array()
   $('#assetSelection option:selected').each(function () {
     selected.push($(this).val())
   })
-  var groups = new DataSet()
+  groupDataSet = new DataSet()
+  if (selected.length > 1) addGroup(groupDataSet, 'Selected Devices')
+
   for (var g = 0; g < selected.length; g++) {
-    groups.add({
-      id: selected[g],
-      content: selected[g],
-      nestedGroups: [selected[g] + '_operator', selected[g] + '_delays']
-    })
-    groups.add({
-      id: selected[g] + '_operator',
-      content: 'Operator'
-    })
-    groups.add({
-      id: selected[g] + '_delays',
-      content: 'Delays'
-    })
+    addGroup(groupDataSet, selected[g])
   }
-  timelineObject.setGroups(groups)
+
+  timelineObject.setGroups(groupDataSet)
+}
+
+function addGroup(groupDataSet, groupName) {
+  groupDataSet.add({
+    id: groupName,
+    content: groupName,
+    nestedGroups: [groupName + '_operator', groupName + '_delays'],
+    value: 1
+  })
+  groupDataSet.add({
+    id: groupName + '_operator',
+    content: 'Operator'
+  })
+  groupDataSet.add({
+    id: groupName + '_delays',
+    content: 'Delays'
+  })
 }
 
 //NORMAL DRAG
@@ -187,6 +242,21 @@ function handleDragStart(event) {
   event.dataTransfer.setData('text', JSON.stringify(item))
 }
 
+function changeTimelineBoundaries(timeline, hours) {
+  let start = new Date(timeline.options.start)
+  let end = new Date(timeline.options.end)
+  start.setHours(start.getHours() + hours)
+  end.setHours(end.getHours() + hours)
+  console.log(end.toISOString())
+  const options = {
+    max: end,
+    min: start,
+    start: start,
+    end: end
+  }
+  timeline.setOptions(options)
+}
+
 function setItemTooltip(item) {
   let duration = Math.round((item.end - item.start) / (1000 * 60))
   item.title = `<span>Device: ${item.group}</span><br>
@@ -197,7 +267,7 @@ function setItemTooltip(item) {
 }
 
 function setSubGroup(item, subgroupName) {
-  item.subgroup = subgroupName
+  //item.subgroup = subgroupName
   item.className = subgroupName
 }
 
@@ -213,7 +283,13 @@ function generateGUID() {
 <template>
   <div class="container-fluid">
     <div class="row timeline-controls">
-      <div class="col-4">
+      <div class="col-3">
+        <h3>Date selection</h3>
+        <button type="button" class="btn btn-primary" id="nextShift">Next Shift</button>
+        <button type="button" class="btn btn-primary" id="previousShift">Previous Shift</button>
+      </div>
+
+      <div class="col-3">
         <h3>Device Selection</h3>
         <select
           id="assetSelection"
@@ -228,7 +304,7 @@ function generateGUID() {
           <option value="DZ799">DZ799</option>
         </select>
       </div>
-      <div class="col-4">
+      <div class="col-3">
         <h3>Delays</h3>
         <ul class="items">
           <li draggable="true" class="item">Hauling</li>
@@ -237,7 +313,7 @@ function generateGUID() {
           <li draggable="true" class="item">Doing Burn Outs</li>
         </ul>
       </div>
-      <div class="col-4">
+      <div class="col-3">
         <h3>Operators</h3>
         <ul class="items">
           <li draggable="true" class="item">Sukhitha</li>
@@ -267,16 +343,16 @@ html {
 #visualization {
   box-sizing: border-box;
   width: 100%;
-  height: 250px;
   margin: 10px;
+  overflow: auto;
 }
 
-.vis-item.delay {
+.vis-item.delays {
   background-color: gold;
   border-color: grey;
 }
 
-.vis-item.vis-selected.delay {
+.vis-item.vis-selected.delays {
   background-color: gold;
   border-color: black;
 }
