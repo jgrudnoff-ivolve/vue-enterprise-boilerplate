@@ -7,12 +7,16 @@ import TimelineDataService from '../services/timelineDataService'
 
 const timelineDataService = new TimelineDataService()
 
-var items = new DataSet(JSON.parse(localStorage.getItem('myData')))
 var timeline
+var rightClickedItemId
+var itemToCopy
+var copyDetails
+
 var opNames = ['Lizzie', 'Sukhitha', 'Juan', 'Roma']
 var delayNames = ['Hauling', 'Meal break', 'Digging', 'Doing Burn Outs']
 onMounted(() => {
   var root = document.getElementsByTagName('html')[0] // '0' to assign the first (and only `HTML` tag)
+  var items = new DataSet(JSON.parse(localStorage.getItem('myData')))
 
   root.setAttribute('class', 'light-theme')
   console.log('Mounting')
@@ -31,6 +35,7 @@ onMounted(() => {
     maxHeight: 700,
     verticalScroll: true,
     stack: false,
+    preferZoom: true,
     multiselect: true,
     snap: function (date, scale, step) {
       var fiveMins = 5 * 60 * 1000
@@ -61,10 +66,10 @@ onMounted(() => {
       var parentGroup = item.group.split('_')[0]
       var groupCategory = item.group.split('_')[1]
 
+      setSubGroup(item, groupCategory)
       //if in shared timeline, replicate change to other timelines
       if (parentGroup == 'Selected Devices') {
         console.log('Dropped item on shared timeline')
-        console.log(timeline.groupsData)
         const matchingGroups = timeline.groupsData.get({
           filter: (x) => {
             let groupCat = x.id.split('_')[1]
@@ -72,22 +77,23 @@ onMounted(() => {
             return groupCat == groupCategory && groupParent != 'Selected Devices'
           }
         })
+        console.log(matchingGroups)
         matchingGroups.forEach((x) => {
           let clonedItem = JSON.parse(JSON.stringify(item))
           clonedItem.group = x.id
-          clonedItem.id = generateGUID()
+          setSubGroup(clonedItem, groupCategory)
           setItemTooltip(clonedItem)
-          items.add(clonedItem)
+          clonedItem.id = generateGUID()
+          timeline.itemsData.add(clonedItem)
+          console.log('Added item from shared timeline', clonedItem)
         })
         console.log(item)
         item.id = generateGUID()
         setItemTooltip(item)
       }
 
-      setSubGroup(item, groupCategory)
-
       // Check if dropped within a delay
-      var overlappingItem = items.get({
+      var overlappingItem = timeline.itemsData.get({
         filter: (x) => {
           return (
             x.group == item.group &&
@@ -109,28 +115,28 @@ onMounted(() => {
           console.log('duration greater than 2 hours')
           overlappingItem.content = item.content
           setItemTooltip(overlappingItem)
-          items.update(overlappingItem)
+          timeline.itemsData.update(overlappingItem)
           return
         } else {
           console.log('duration less than 2 hours')
           let clonedOverlappingItem = JSON.parse(JSON.stringify(overlappingItem))
           overlappingItem.end = item.start
           setItemTooltip(overlappingItem)
-          items.update(overlappingItem)
+          timeline.itemsData.update(overlappingItem)
           const guid = generateGUID()
           clonedOverlappingItem.start = item.end
           clonedOverlappingItem.id = guid
           console.log('cloned item', JSON.stringify(clonedOverlappingItem))
           if (Date.parse(clonedOverlappingItem.start) < Date.parse(clonedOverlappingItem.end)) {
             setItemTooltip(clonedOverlappingItem)
-            items.add(clonedOverlappingItem)
+            timeline.itemsData.add(clonedOverlappingItem)
           }
           callback(item)
         }
       }
 
       // if not dropped within a delay, fill gap if appropriate
-      let allItems = items.get({
+      let allItems = timeline.itemsData.get({
         filter: (x) => {
           return x.subgroup == item.subgroup && x.group == item.group
         }
@@ -189,10 +195,16 @@ onMounted(() => {
     changeTimelineBoundaries(timeline, -8)
   })
 
-  timeline.on('contextmenu', function (props) {
-    if (props.item != null) {
-      props.event.preventDefault()
+  timeline.on('dragover', function (props) {
+    console.log('Dragging over ', props)
+  })
 
+  timeline.on('contextmenu', function (props) {
+    console.log(props)
+    props.event.preventDefault()
+
+    if (props.item != null) {
+      rightClickedItemId = props.item
       // Show contextmenu
       $('.custom-menu')
         .finish()
@@ -202,16 +214,22 @@ onMounted(() => {
           top: props.event.pageY + 'px',
           left: props.event.pageX + 'px'
         })
+    } else {
+      $('.custom-menu-timeline')
+        .finish()
+        .toggle(100)
+        // In the right position (the mouse)
+        .css({
+          top: props.event.pageY + 'px',
+          left: props.event.pageX + 'px'
+        })
+      copyDetails = props
     }
-    console.log(props)
   })
   // If the document is clicked somewhere
-  $(document).bind('mousedown', function (e) {
-    // If the clicked element is not the menu
-    if (!$(e.target).parents('.custom-menu').length > 0) {
-      // Hide it
-      $('.custom-menu').hide(100)
-    }
+  $(document).bind('mouseup', function (e) {
+    $('.custom-menu-timeline').hide(100)
+    $('.custom-menu').hide(100)
   })
   var dragItems = document.querySelectorAll('.items .item')
   for (var i = dragItems.length - 1; i >= 0; i--) {
@@ -309,8 +327,10 @@ function changeTimelineBoundaries(timeline, hours) {
 }
 
 function setItemTooltip(item) {
-  let duration = Math.round((item.end - item.start) / (1000 * 60))
-  item.title = `<span>Device: ${item.group}</span><br>
+  let duration = Math.round((Date.parse(item.end) - Date.parse(item.start)) / (1000 * 60))
+  var parentGroup = item.group.split('_')[0]
+
+  item.title = `<span>Device: ${parentGroup}</span><br>
         <span>Delay: ${item.content}</span><br>
         <span>Start: ${item.start}</span><br>
         <span>End: ${item.end}</span><br>
@@ -344,6 +364,32 @@ function deleteSelected() {
   console.log(timeline.getSelection())
   let selectedIds = timeline.getSelection()
   timeline.itemsData.remove(selectedIds)
+}
+
+function deleteRightClicked() {
+  timeline.itemsData.remove(rightClickedItemId)
+}
+
+function copyItem() {
+  itemToCopy = rightClickedItemId
+}
+
+function pasteItem() {
+  console.log(copyDetails)
+  let templateItem = timeline.itemsData.get(itemToCopy)
+  let clonedItem = JSON.parse(JSON.stringify(templateItem))
+  let duration = Math.round(Date.parse(clonedItem.end) - Date.parse(clonedItem.start))
+  clonedItem.start = copyDetails.time
+  clonedItem.end = new Date(Date.parse(copyDetails.time) + duration)
+  clonedItem.group = copyDetails.group
+  clonedItem.id = generateGUID()
+  console.log(clonedItem)
+  timeline.itemsData.add(clonedItem)
+}
+
+function editItem() {
+  var item = timeline.itemsData.get(rightClickedItemId)
+  alert('EDITING ITEM: ' + JSON.stringify(item))
 }
 </script>
 
@@ -398,12 +444,7 @@ function deleteSelected() {
       <div id="visualization"></div>
     </div>
   </div>
-  <button
-    type="button"
-    @click="saveTimelineData"
-    class="iv-btn iv-btn-secondary iv-btn-tertiary"
-    id="nextShift"
-  >
+  <button type="button" @click="saveTimelineData" class="iv-btn iv-btn-primary" id="nextShift">
     Save Data
   </button>
   <button
@@ -423,9 +464,13 @@ function deleteSelected() {
     Delete Selected
   </button>
   <ul class="custom-menu">
-    <li data-action="first" @click="deleteSelected">Action One</li>
-    <li data-action="second">Action Two</li>
-    <li data-action="third">Action Three</li>
+    <li data-action="first" @click="deleteRightClicked">Delete</li>
+    <li data-action="second" @click="copyItem">Copy</li>
+    <li data-action="third" @click="editItem">Edit Item</li>
+  </ul>
+
+  <ul class="custom-menu-timeline">
+    <li data-action="second" @click="pasteItem">Paste</li>
   </ul>
 </template>
 
@@ -549,7 +594,8 @@ li.object-item {
 /* CSS3 */
 
 /* The whole thing */
-.custom-menu {
+.custom-menu,
+.custom-menu-timeline {
   display: none;
   z-index: 1000;
   position: absolute;
@@ -564,7 +610,8 @@ li.object-item {
 }
 
 /* Each of the items in the list */
-.custom-menu li {
+.custom-menu li,
+.custom-menu-timeline li {
   padding: 8px 12px;
   cursor: pointer;
   list-style-type: none;
@@ -572,7 +619,8 @@ li.object-item {
   user-select: none;
 }
 
-.custom-menu li:hover {
+.custom-menu li:hover,
+.custom-menu-timeline li:hover {
   background-color: #def;
 }
 </style>
