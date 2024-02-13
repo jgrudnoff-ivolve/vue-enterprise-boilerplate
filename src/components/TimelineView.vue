@@ -2,14 +2,21 @@
 import { Timeline } from 'vis-timeline'
 import { DataSet } from 'vis-data'
 import $ from 'jQuery'
-
 import { onMounted } from 'vue'
+import TimelineDataService from '../services/timelineDataService'
 
+const timelineDataService = new TimelineDataService()
+
+var items = new DataSet(JSON.parse(localStorage.getItem('myData')))
+var timeline
+var opNames = ['Lizzie', 'Sukhitha', 'Juan', 'Roma']
+var delayNames = ['Hauling', 'Meal break', 'Digging', 'Doing Burn Outs']
 onMounted(() => {
+  var root = document.getElementsByTagName('html')[0] // '0' to assign the first (and only `HTML` tag)
+
+  root.setAttribute('class', 'light-theme')
   console.log('Mounting')
   //var items = new DataSet()
-  var opNames = ['Lizzie', 'Sukhitha', 'Juan', 'Roma']
-  var delayNames = ['Hauling', 'Meal break', 'Digging', 'Doing Burn Outs']
 
   // create visualization
   var container = document.getElementById('visualization')
@@ -40,6 +47,7 @@ onMounted(() => {
     },
 
     onAdd: function (item, callback) {
+      console.log('Adding item')
       if (
         !(
           (item.group.includes('_operator') && opNames.includes(item.content)) ||
@@ -83,6 +91,7 @@ onMounted(() => {
         filter: (x) => {
           return (
             x.group == item.group &&
+            x.type != 'background' &&
             Date.parse(x.start) < Date.parse(item.start) &&
             Date.parse(x.end) > Date.parse(item.start)
           )
@@ -155,31 +164,21 @@ onMounted(() => {
       callback(item)
     },
     onMove: function (item, callback) {
+      console.log('Moving item')
       setItemTooltip(item)
       callback(item)
     }
   }
 
-  var timeline = new Timeline(container)
+  timeline = new Timeline(container)
   var groups = new DataSet()
   timeline.setOptions(options)
   setGroups(timeline, groups)
-  var items = new DataSet([
-    {
-      id: 1,
-      content: 'Digging - Uneditable',
-      editable: false,
-      start: '2024-01-01T03:00:00.000Z',
-      end: '2024-01-01T05:00:00.000Z',
-      group: 'RD336_delays'
-    }
-  ])
+  //var items = new DataSet(localStorage.getItem('myData'))
   timeline.setItems(items)
 
   $('#assetSelection').on('change', function (e) {
     setGroups(timeline, groups)
-    //remove items from shared timeline
-    //Add shared items to this timeline
   })
 
   $('#nextShift').on('click', function (e) {
@@ -190,10 +189,35 @@ onMounted(() => {
     changeTimelineBoundaries(timeline, -8)
   })
 
+  timeline.on('contextmenu', function (props) {
+    if (props.item != null) {
+      props.event.preventDefault()
+
+      // Show contextmenu
+      $('.custom-menu')
+        .finish()
+        .toggle(100)
+        // In the right position (the mouse)
+        .css({
+          top: props.event.pageY + 'px',
+          left: props.event.pageX + 'px'
+        })
+    }
+    console.log(props)
+  })
+  // If the document is clicked somewhere
+  $(document).bind('mousedown', function (e) {
+    // If the clicked element is not the menu
+    if (!$(e.target).parents('.custom-menu').length > 0) {
+      // Hide it
+      $('.custom-menu').hide(100)
+    }
+  })
   var dragItems = document.querySelectorAll('.items .item')
   for (var i = dragItems.length - 1; i >= 0; i--) {
     var item = dragItems[i]
     item.addEventListener('dragstart', handleDragStart.bind(this), false)
+    item.addEventListener('dragend', handleDragEnd.bind(this), false)
   }
 })
 
@@ -210,36 +234,63 @@ function setGroups(timelineObject, groupDataSet) {
   }
 
   timelineObject.setGroups(groupDataSet)
+  addSummaryRows()
 }
 
 function addGroup(groupDataSet, groupName) {
+  let className = 'main-group'
+  if (groupName == 'Selected Devices') className = 'selected-devices-group'
   groupDataSet.add({
     id: groupName,
     content: groupName,
     nestedGroups: [groupName + '_operator', groupName + '_delays'],
-    value: 1
+    value: 1,
+    className: className
   })
   groupDataSet.add({
     id: groupName + '_operator',
-    content: 'Operator'
+    content: 'Operator',
+    className: 'operator-row'
   })
   groupDataSet.add({
     id: groupName + '_delays',
-    content: 'Delays'
+    content: 'Delays',
+    className: 'delay-row'
   })
+}
+
+function addSummaryRows() {
+  var summaryDiv =
+    '<div class="summaryStuff"><img src="../src/assets/yellow-square.png"> 1.4h <img src="../src/assets/green-square.png"> 5.6h</div>'
+  $('.vis-foreground .vis-group.main-group').append(summaryDiv)
+  console.log($('.vis-foreground .vis-group.main-group'))
 }
 
 //NORMAL DRAG
 function handleDragStart(event) {
+  let tileName = event.target.innerHTML
+  // if tilename =
+  if (opNames.includes(tileName)) {
+    $('.operator-row').attr('highlight', true)
+  } else {
+    $('.delay-row').attr('highlight', true)
+  }
+
   console.log('Drag started')
   event.dataTransfer.effectAllowed = 'move'
   const guid = generateGUID()
   var item = {
     id: guid,
     type: 'range',
-    content: event.target.innerHTML
+    content: tileName
   }
   event.dataTransfer.setData('text', JSON.stringify(item))
+}
+
+function handleDragEnd(event) {
+  console.log('Drag end')
+  $('.delay-row').attr('highlight', false)
+  $('.operator-row').attr('highlight', false)
 }
 
 function changeTimelineBoundaries(timeline, hours) {
@@ -278,6 +329,22 @@ function generateGUID() {
     return v.toString(16)
   })
 }
+
+function saveTimelineData() {
+  localStorage.setItem('myData', JSON.stringify(timeline.itemsData.get()))
+  console.log(localStorage.getItem('myData'))
+}
+
+function resetData() {
+  var defaultData = timelineDataService.getTimelineData()
+  timeline.setItems(defaultData)
+}
+
+function deleteSelected() {
+  console.log(timeline.getSelection())
+  let selectedIds = timeline.getSelection()
+  timeline.itemsData.remove(selectedIds)
+}
 </script>
 
 <template>
@@ -285,8 +352,12 @@ function generateGUID() {
     <div class="row timeline-controls">
       <div class="col-3">
         <h3>Date selection</h3>
-        <button type="button" class="btn btn-primary" id="nextShift">Next Shift</button>
-        <button type="button" class="btn btn-primary" id="previousShift">Previous Shift</button>
+        <button type="button" class="iv-btn iv-btn-secondary iv-btn-tertiary" id="nextShift">
+          Next Shift
+        </button>
+        <button type="button" class="iv-btn iv-btn-secondary iv-btn-tertiary" id="previousShift">
+          Previous Shift
+        </button>
       </div>
 
       <div class="col-3">
@@ -327,6 +398,35 @@ function generateGUID() {
       <div id="visualization"></div>
     </div>
   </div>
+  <button
+    type="button"
+    @click="saveTimelineData"
+    class="iv-btn iv-btn-secondary iv-btn-tertiary"
+    id="nextShift"
+  >
+    Save Data
+  </button>
+  <button
+    type="button"
+    @click="resetData"
+    class="iv-btn iv-btn-secondary iv-btn-tertiary"
+    id="nextShift"
+  >
+    Reset Data
+  </button>
+  <button
+    type="button"
+    class="iv-btn iv-btn-secondary iv-btn-tertiary"
+    @click="deleteSelected"
+    id="nextShift"
+  >
+    Delete Selected
+  </button>
+  <ul class="custom-menu">
+    <li data-action="first" @click="deleteSelected">Action One</li>
+    <li data-action="second">Action Two</li>
+    <li data-action="third">Action Three</li>
+  </ul>
 </template>
 
 <style>
@@ -334,6 +434,18 @@ body,
 html {
   font-family: arial, sans-serif;
   font-size: 18px;
+}
+
+.vis-group {
+  background: #ffffff;
+}
+
+.main-group {
+  background: #c6c6c6;
+}
+
+.selected-devices-group {
+  background: #ffc600;
 }
 
 .col-3 {
@@ -345,6 +457,28 @@ html {
   width: 100%;
   margin: 10px;
   overflow: auto;
+  border-radius: 4px;
+  border: var(--faded-grey) solid 1px;
+  background: var(--light-background-color);
+}
+
+.operator-row[highlight='true'],
+.delay-row[highlight='true'] {
+  background: #d7f3ff85;
+}
+
+.vis-item.vis-background.working {
+  background-color: rgba(105, 255, 98, 0.7);
+}
+
+.vis-item.vis-background.idle {
+  background-color: rgba(255, 251, 0, 0.7);
+}
+
+.summaryStuff {
+  position: absolute;
+  right: 16px;
+  top: 6px;
 }
 
 .vis-item.delays {
@@ -410,5 +544,35 @@ li.object-item {
   border-radius: 2px;
   margin-bottom: 5px;
   padding: 5px 12px;
+}
+
+/* CSS3 */
+
+/* The whole thing */
+.custom-menu {
+  display: none;
+  z-index: 1000;
+  position: absolute;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  white-space: nowrap;
+  font-family: sans-serif;
+  background: #fff;
+  color: #333;
+  border-radius: 5px;
+  padding: 0;
+}
+
+/* Each of the items in the list */
+.custom-menu li {
+  padding: 8px 12px;
+  cursor: pointer;
+  list-style-type: none;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.custom-menu li:hover {
+  background-color: #def;
 }
 </style>

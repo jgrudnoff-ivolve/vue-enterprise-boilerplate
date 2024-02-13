@@ -1,0 +1,137 @@
+[
+  {
+    "id": 1,
+    "content": "Digging - Uneditable",
+    "editable": false,
+    "start": "2024-01-01T03:00:00.000Z",
+    "end": "2024-01-01T05:00:00.000Z",
+    "group": "RD336_delays"
+  },
+  {
+    "id": 2,
+    "content": "<div><img src='../src/assets/stopped.png'>  Icon </div>",
+    "start": "2024-01-01T05:00:00.000Z",
+    "end": "2024-01-01T05:30:00.000Z",
+    "group": "RD336_delays"
+  },
+  {
+    "id": 23,
+    "start": "2024-01-01T05:00:00.000Z",
+    "end": "2024-01-01T06:22:00.000Z",
+    "type": "background",
+    "className": "working",
+    "group": "DZ799"
+  },
+  {
+    "id": 24,
+    "start": "2024-01-01T04:40:00.000Z",
+    "end": "2024-01-01T05:00:00.000Z",
+    "type": "background",
+    "className": "idle",
+    "group": "DZ799"
+  },
+  {
+    "id": 25,
+    "start": "2024-01-01T03:23:00.000Z",
+    "end": "2024-01-01T04:40:00.000Z",
+    "type": "background",
+    "className": "working",
+    "group": "DZ799"
+  },
+  {
+    "id": 26,
+    "start": "2024-01-01T03:11:00.000Z",
+    "end": "2024-01-01T03:23:00.000Z",
+    "type": "background",
+    "className": "idle",
+    "group": "DZ799"
+  },
+  {
+    "id": 27,
+    "start": "2024-01-01T00:11:00.000Z",
+    "end": "2024-01-01T03:11:00.000Z",
+    "type": "background",
+    "className": "working",
+    "group": "DZ799"
+  },
+  {
+    "id": 33,
+    "start": "2024-01-01T05:00:00.000Z",
+    "end": "2024-01-01T06:22:00.000Z",
+    "type": "background",
+    "className": "working",
+    "group": "WL405_delays"
+  },
+  {
+    "id": 34,
+    "start": "2024-01-01T04:40:00.000Z",
+    "end": "2024-01-01T05:00:00.000Z",
+    "type": "background",
+    "className": "idle",
+    "group": "WL405_delays"
+  },
+  {
+    "id": 35,
+    "start": "2024-01-01T03:23:00.000Z",
+    "end": "2024-01-01T04:40:00.000Z",
+    "type": "background",
+    "className": "working",
+    "group": "WL405_delays"
+  },
+  {
+    "id": 36,
+    "start": "2024-01-01T03:11:00.000Z",
+    "end": "2024-01-01T03:23:00.000Z",
+    "type": "background",
+    "className": "idle",
+    "group": "WL405_delays"
+  },
+  {
+    "id": 37,
+    "start": "2024-01-01T00:11:00.000Z",
+    "end": "2024-01-01T03:11:00.000Z",
+    "type": "background",
+    "className": "working",
+    "group": "WL405_delays"
+  },
+  {
+    "id": 43,
+    "start": "2024-01-01T05:00:00.000Z",
+    "end": "2024-01-01T06:22:00.000Z",
+    "type": "background",
+    "className": "working",
+    "group": "WL405_operator"
+  },
+  {
+    "id": 44,
+    "start": "2024-01-01T04:40:00.000Z",
+    "end": "2024-01-01T05:00:00.000Z",
+    "type": "background",
+    "className": "idle",
+    "group": "WL405_operator"
+  },
+  {
+    "id": 45,
+    "start": "2024-01-01T03:23:00.000Z",
+    "end": "2024-01-01T04:40:00.000Z",
+    "type": "background",
+    "className": "working",
+    "group": "WL405_operator"
+  },
+  {
+    "id": 46,
+    "start": "2024-01-01T03:11:00.000Z",
+    "end": "2024-01-01T03:23:00.000Z",
+    "type": "background",
+    "className": "idle",
+    "group": "WL405_operator"
+  },
+  {
+    "id": 47,
+    "start": "2024-01-01T00:11:00.000Z",
+    "end": "2024-01-01T03:11:00.000Z",
+    "type": "background",
+    "className": "working",
+    "group": "WL405_operator"
+  }
+]

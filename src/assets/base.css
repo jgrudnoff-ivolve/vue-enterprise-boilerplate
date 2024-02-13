@@ -1,73 +1,393 @@
-/* color palette from <https://github.com/vuejs/theme> */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  --background-color: #2a2a2a;
+  --light-background-color: #3a3a3a;
+  --primary-color: #f8bc1d;
+  --secondary-color: #d9d9d9;
+  --popover-color: #343434;
+  --faded-grey: #939393;
+  --disabled-grey: #383838;
+  --disabled-grey-text: #5f5f5f;
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  --danger-color: #e54747;
+  --success-color: #4e9e60;
 
-  --vt-c-indigo: #2c3e50;
+  --primary-hover: #daa61c;
+  --secondary-hover: #939393;
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  --text-color: #d9d9d9;
+  --text-inverse: #414140;
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  --border-radius: 4px;
+
+  --focus-color: #0099d9;
+  --chevron-url: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23939393' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  --cross-url: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23D9D9D9'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e");
 }
 
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
+.light-theme {
+  --background-color: #f2f2f2;
+  --light-background-color: #faf9f9;
+  --disabled-grey: #d9d9d9;
+  --disabled-grey-text: #939393;
+  --secondary-color: #414140;
+  --text-color: #404041;
+  --text-inverse: #d9d9d9;
 
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
+  --cross-url: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e");
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
+.form-check-label {
+  color: var(--text-color);
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
+.iv-btn {
+  border-color: transparent;
+}
+
+.button-container > * {
+  margin: 30px;
 }
 
 body {
-  min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  transition: color 0.5s, background-color 0.5s;
-  line-height: 1.6;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
-    Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  font-size: 15px;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+.section-title {
+  margin-top: 10px;
+  color: var(--text-color);
+  text-align: center;
+}
+
+.button-container {
+  justify-content: center;
+  background-color: var(--background-color);
+  border: 1px solid #808080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-container:first-of-type {
+  border-right: none;
+}
+
+/*
+iv Buttons
+*/
+
+.iv-btn {
+  border-radius: var(--border-radius);
+  padding: 9px 28px 9px 28px;
+  transition: all 0.2s;
+  min-height: 45px;
+  margin: 4px;
+}
+
+.iv-icon-btn {
+  padding: 0px 18px;
+  font-weight: 100;
+  font-size: 18px;
+}
+
+.iv-btn-primary {
+  background: var(--primary-color);
+  color: #414140;
+}
+
+.iv-btn-secondary {
+  background: var(--secondary-color);
+  color: var(--text-inverse);
+}
+
+.iv-btn-danger {
+  background: var(--danger-color);
+  color: #ffffff;
+}
+
+.iv-btn-tertiary {
+  background: transparent;
+  border-style: solid;
+  border-width: 1px;
+  color: var(--text-color);
+}
+
+.iv-btn-ghost {
+  background: transparent;
+  color: var(--text-color);
+  padding: 0px 10px;
+}
+
+.iv-btn-secondary.iv-btn-tertiary {
+  border-color: var(--text-color);
+  color: var(--text-color);
+}
+
+.iv-btn-danger.iv-btn-tertiary {
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+.iv-btn:disabled {
+  background: var(--disabled-grey);
+  color: var(--disabled-grey-text);
+  border-color: transparent;
+}
+
+.iv-btn-primary:hover:enabled {
+  background: var(--primary-hover);
+}
+
+.iv-btn-secondary:hover:enabled {
+  background: var(--secondary-hover);
+}
+
+.iv-btn-secondary.iv-btn-tertiary:hover:enabled {
+  color: var(--text-inverse);
+  border-color: transparent;
+}
+
+.iv-btn-secondary.iv-btn-tertiary:disabled {
+  background: transparent;
+  border-color: var(--disabled-grey);
+}
+
+.iv-btn-ghost:disabled {
+  background: transparent;
+  border-color: transparent;
+}
+
+.iv-btn-danger.iv-btn-ghost {
+  color: var(--danger-color);
+}
+
+.iv-btn:focus {
+  box-shadow: 0 0 0 0.1rem var(--focus-color);
+}
+
+/*
+Checkboxes
+*/
+
+.iv-checkbox[type='checkbox'] {
+  border-radius: 3px;
+  border-color: var(--faded-grey);
+  border-radius: var(--border-radius);
+  background: transparent;
+  transition: 0.2s;
+}
+.iv-checkbox:hover {
+  border-color: var(--primary-color);
+  background: transparent;
+}
+
+.iv-checkbox:checked[type='checkbox'] {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23F8BC1D' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+}
+/*
+SelectBoxes
+*/
+
+.iv-select.form-select {
+  background-image: var(--chevron-url);
+}
+
+.iv-select {
+  border-color: var(--text-inverse);
+  background-color: var(--light-background-color);
+  color: var(--text-color);
+  padding: 10px 20px;
+}
+
+.iv-select:disabled {
+  background: var(--disabled-grey);
+  color: var(--disabled-grey-text);
+}
+
+.iv-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: none;
+}
+
+.iv-select-error {
+  border-color: var(--danger-color);
+}
+
+.iv-select-error:focus {
+  border-color: var(--danger-color);
+}
+
+/*
+Loading indicator
+*/
+
+.spinner-border {
+  color: var(--text-color);
+}
+
+.modal-content {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.modal-header {
+  margin: 2px 20px;
+  padding: 16px 0px;
+  border-color: var(--disabled-grey);
+  border-width: 2px;
+}
+
+.modal-body {
+  margin: 2px 20px;
+  padding: 16px 0px;
+  border-color: var(--disabled-grey);
+  border-width: 2px;
+}
+
+.modal-footer {
+  border: none;
+}
+
+.modal-body > * {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.form-control,
+.form-control:focus,
+.form-control:active,
+.form-control:hover {
+  background-color: var(--light-background-color);
+  border: none;
+  color: var(--text-color);
+}
+
+form > * {
+  margin-bottom: 10px;
+}
+
+.btn-close {
+  background: transparent var(--cross-url) center/1em auto no-repeat;
+}
+
+/*
+Alerts
+*/
+
+.alert {
+  border: none;
+}
+
+.alert-icon {
+  margin-right: 6px;
+}
+
+/* High contrast alerts */
+.alert-high-contrast .btn-close {
+  background: transparent
+    url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23D9D9D9'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e")
+    center/1em auto no-repeat;
+}
+
+.alert-danger.alert-high-contrast {
+  background-color: var(--danger-color);
+  color: #ffdddd;
+}
+
+.alert-success.alert-high-contrast {
+  background-color: var(--success-color);
+  color: #e3f4e7;
+}
+
+.alert-info.alert-high-contrast {
+  background-color: #0099d9;
+  color: #d8f2fd;
+}
+
+.alert-warning.alert-high-contrast {
+  background-color: #f28a50;
+  color: #ffe5d7;
+}
+
+/* Low contrast alerts */
+.alert-low-contrast .btn-close {
+  background: transparent
+    url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%235F5F5F'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e")
+    center/1em auto no-repeat;
+}
+
+.alert-danger.alert-low-contrast {
+  background-color: #ffdddd;
+  color: var(--danger-color);
+}
+
+.alert-success.alert-low-contrast {
+  background-color: #e3f4e7;
+  color: var(--success-color);
+}
+
+.alert-info.alert-low-contrast {
+  background-color: #d8f2fd;
+  color: #0099d9;
+}
+
+.alert-warning.alert-low-contrast {
+  background-color: #ffe5d7;
+  color: #f28a50;
+}
+
+/*
+Popover
+*/
+
+.iv-popover {
+  background: var(--popover-color);
+  color: var(--text-color);
+  filter: drop-shadow(0px 0px 4px var(--background-color));
+  margin: 4px;
+}
+
+/*
+Icons
+*/
+.iv-icon {
+  color: var(--text-color);
+}
+
+.iv-icon:hover {
+  color: var(--primary-color);
+}
+
+.iv-icon:disabled {
+  color: red;
+}
+
+.iv-nav-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+  border: none;
+  height: 45px;
+  width: 45px;
+}
+
+.iv-nav-button:active {
+  background: var(--primary-color);
+  color: var(--text-inverse);
+}
+
+.iv-nav-button:active .iv-icon {
+  background: var(--primary-color);
+  color: var(--text-inverse);
+}
+
+.iv-icon-container {
+  background: transparent;
+  border: none;
 }
